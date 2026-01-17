@@ -21,10 +21,6 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
-# ============================================================================
-# CONSTANTES Y CONFIGURACIÓN
-# ============================================================================
-
 API_BASE_URL = "https://bible-api.deno.dev"
 
 # Versiones disponibles según la API
@@ -56,13 +52,13 @@ DEFAULT_CONFIG = {
     "notification_interval": 30,  # minutos entre notificaciones
     "notification_duration": 10,  # segundos de duración de notificación
     "version": "rv1960",
-    "categories": ["fe", "amor", "esperanza"],  # Categorías activas
-    "testament": "both",  # "old", "new", "both"
+    "categories": ["fe", "amor", "esperanza"],
+    "testament": "both",
     "show_book_info": True,
     "play_sound": False,
-    "sound_type": "default",  # "default", "bell", "chime", "none"
+    "sound_type": "default",
     "start_minimized": True,
-    "theme": "auto",  # "light", "dark", "auto"
+    "theme": "auto",
     "last_verse": None,
     "last_notification": None,
     "verse_history": []  # Historial de versículos mostrados
@@ -70,10 +66,6 @@ DEFAULT_CONFIG = {
 
 CONFIG_DIR = Path.home() / ".config" / "bible-notifier"
 CONFIG_FILE = CONFIG_DIR / "config.json"
-
-# ============================================================================
-# FUNCIONES DE UTILIDAD
-# ============================================================================
 
 def get_resource_path(relative_path):
     """Obtiene la ruta absoluta a un recurso"""
@@ -106,7 +98,6 @@ def load_config():
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config = json.load(f)
             
-            # Fusionar con valores por defecto
             full_config = DEFAULT_CONFIG.copy()
             full_config.update(config)
             return full_config
@@ -125,10 +116,6 @@ def save_config(config):
     except Exception as e:
         print(f"Error guardando configuración: {e}")
         return False
-
-# ============================================================================
-# MANEJADOR DE TEMAS
-# ============================================================================
 
 class ThemeManager:
     """Manejador de temas claro/oscuro estilo Deepin"""
@@ -159,7 +146,7 @@ class ThemeManager:
     def get_dark_theme():
         """Tema oscuro estilo Deepin"""
         return {
-            "primary": "#2CA7F8",  # Azul Deepin
+            "primary": "#2CA7F8",
             "primary_dark": "#1E8FD5",
             "primary_light": "#4AB8FF",
             "secondary": "#A0A0A0",
@@ -547,17 +534,12 @@ class ThemeManager:
         }}
         """
 
-# ============================================================================
-# CLASE PARA MANEJAR LA API DE LA BIBLIA
-# ============================================================================
-
 class BibleAPI:
     """Clase para interactuar con la API de la Biblia"""
     
     @staticmethod
     def search_verse(query: str, version: str = "rv1960", testament: str = "both", 
                     take: int = 5, page: int = 1) -> List[Dict]:
-        """Busca versículos por palabra clave"""
         try:
             url = f"{API_BASE_URL}/api/read/{version}/search"
             params = {
@@ -578,7 +560,6 @@ class BibleAPI:
     
     @staticmethod
     def get_random_verse(version: str = "rv1960") -> Optional[Dict]:
-        """Obtiene un versículo aleatorio"""
         try:
             # Primero, obtener todos los libros disponibles
             books_url = f"{API_BASE_URL}/api/books"
@@ -655,10 +636,6 @@ class BibleAPI:
             print(f"Error obteniendo versículo aleatorio: {e}")
             return None
 
-# ============================================================================
-# VENTANA PARA SELECCIONAR CATEGORÍAS
-# ============================================================================
-
 class CategoriesWindow(QDialog):
     """Ventana para seleccionar categorías de versículos"""
     
@@ -679,7 +656,6 @@ class CategoriesWindow(QDialog):
     
     def init_ui(self):
         self.setStyleSheet(ThemeManager.get_theme_stylesheet(self.current_theme))
-        """Inicializar interfaz de usuario"""
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -714,7 +690,6 @@ class CategoriesWindow(QDialog):
         categories_layout.setSpacing(10)
         categories_layout.setContentsMargins(5, 5, 5, 5)
         
-        # Crear cards para cada categoría
         self.category_cards = {}
         for category_id, category_info in VERSE_CATEGORIES.items():
             card = self.create_category_card(category_id, category_info)
@@ -763,7 +738,6 @@ class CategoriesWindow(QDialog):
         layout.addLayout(button_layout)
     
     def create_category_card(self, category_id, category_info):
-        """Crea una card para una categoría"""
         card = QFrame()
         card.setObjectName("category_card")
         card.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -815,11 +789,9 @@ class CategoriesWindow(QDialog):
         return card
     
     def card_clicked(self, category_id, card):
-        """Maneja clic en la card de categoría"""
         card.checkbox.toggle()
     
     def toggle_category(self, category_id, checked):
-        """Maneja cambio en checkbox de categoría"""
         if checked and category_id not in self.selected_categories:
             self.selected_categories.append(category_id)
         elif not checked and category_id in self.selected_categories:
@@ -829,26 +801,22 @@ class CategoriesWindow(QDialog):
         self.counter_label.setText(f"Categorías seleccionadas: {len(self.selected_categories)}")
     
     def select_all_categories(self):
-        """Selecciona todas las categorías"""
         self.selected_categories = list(VERSE_CATEGORIES.keys())
         for category_id, card in self.category_cards.items():
             card.checkbox.setChecked(True)
         self.counter_label.setText(f"Categorías seleccionadas: {len(self.selected_categories)}")
     
     def deselect_all_categories(self):
-        """Deselecciona todas las categorías"""
         self.selected_categories = []
         for category_id, card in self.category_cards.items():
             card.checkbox.setChecked(False)
         self.counter_label.setText(f"Categorías seleccionadas: {len(self.selected_categories)}")
     
     def save_categories(self):
-        """Guarda las categorías seleccionadas"""
         self.categories_changed.emit(self.selected_categories)
         self.accept()
     
     def apply_theme(self):
-        """Aplica el tema actual"""
         parent = self.parent()
         theme_type = "light"  # Valor por defecto
         
@@ -861,7 +829,6 @@ class CategoriesWindow(QDialog):
             elif isinstance(parent, MainWindow):
                 theme_type = parent.config.get("theme", "auto")
         
-        # Si el tema es "auto", detectar el tema del sistema
         if theme_type == "auto":
             import subprocess
             try:
@@ -876,12 +843,7 @@ class CategoriesWindow(QDialog):
         
         self.setStyleSheet(ThemeManager.get_theme_stylesheet(theme_type))
 
-# ============================================================================
-# VENTANA PRINCIPAL (OCULTA) PARA MANTENER LA APLICACIÓN
-# ============================================================================
-
 class MainWindow(QMainWindow):
-    """Ventana principal oculta que mantiene la aplicación en ejecución"""
     
     def __init__(self):
         super().__init__()
@@ -911,7 +873,6 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(5000, self.show_notification)  # Esperar 5 segundos al inicio
     
     def apply_theme(self):
-        """Aplica el tema actual"""
         theme_type = self.current_theme
         if theme_type == "auto":
             # Detectar tema del sistema (simple)
@@ -929,7 +890,6 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(ThemeManager.get_theme_stylesheet(theme_type))
     
     def init_tray(self):
-        """Inicializar el ícono en la bandeja del sistema"""
         # Crear ícono
         self.tray_icon = QSystemTrayIcon(self)
         
@@ -975,12 +935,10 @@ class MainWindow(QMainWindow):
         # Crear menú contextual
         self.tray_menu = QMenu()
         
-        # Acción para mostrar una notificación ahora
         self.show_now_action = QAction("📖 Mostrar versículo ahora", self)
         self.show_now_action.triggered.connect(self.show_notification)
         self.tray_menu.addAction(self.show_now_action)
         
-        # Separador
         self.tray_menu.addSeparator()
         
         # Estado (habilitado/deshabilitado)
@@ -991,10 +949,8 @@ class MainWindow(QMainWindow):
         self.enable_action.triggered.connect(self.toggle_notifications)
         self.tray_menu.addAction(self.enable_action)
         
-        # Separador
         self.tray_menu.addSeparator()
         
-        # Configuración
         self.config_action = QAction("⚙️ Configuración", self)
         self.config_action.triggered.connect(self.show_config_dialog)
         self.tray_menu.addAction(self.config_action)
@@ -1004,24 +960,18 @@ class MainWindow(QMainWindow):
         self.history_action.triggered.connect(self.show_history)
         self.tray_menu.addAction(self.history_action)
         
-        # Separador
         self.tray_menu.addSeparator()
         
-        # Salir
         self.quit_action = QAction("🚪 Salir", self)
         self.quit_action.triggered.connect(self.quit_app)
         self.tray_menu.addAction(self.quit_action)
         
-        # Asignar menú al ícono
         self.tray_icon.setContextMenu(self.tray_menu)
         
-        # Mostrar ícono
         self.tray_icon.show()
         
-        # Conectar clic en el ícono
         self.tray_icon.activated.connect(self.on_tray_activated)
         
-        # Mostrar mensaje de bienvenida
         self.tray_icon.showMessage(
             "Bible Verse Notifier",
             "La aplicación se está ejecutando en la bandeja del sistema.",
@@ -1038,18 +988,15 @@ class MainWindow(QMainWindow):
             self.start_notification_timer()
     
     def start_notification_timer(self):
-        """Iniciar el temporizador de notificaciones"""
         interval = self.config["notification_interval"] * 60 * 1000  # Convertir a milisegundos
         self.notification_timer.start(interval)
         print(f"Temporizador iniciado: {interval} ms ({self.config['notification_interval']} minutos)")
     
     def stop_notification_timer(self):
-        """Detener el temporizador de notificaciones"""
         self.notification_timer.stop()
         print("Temporizador detenido")
     
     def toggle_notifications(self, checked):
-        """Activar/desactivar notificaciones"""
         self.config["enabled"] = checked
         status_icon = "✅" if checked else "❌"
         self.enable_action.setText(f"{status_icon} Notificaciones")
@@ -1065,7 +1012,6 @@ class MainWindow(QMainWindow):
         print(f"Notificaciones {'habilitadas' if checked else 'deshabilitadas'}")
     
     def show_notification(self):
-        """Mostrar una notificación con un versículo bíblico"""
         if not self.config["enabled"]:
             return
         
@@ -1120,7 +1066,6 @@ class MainWindow(QMainWindow):
         print(f"Notificación mostrada ({duration/1000}s): {verse['book']} {verse['chapter']}:{verse['number']}")
     
     def get_random_verse(self) -> Optional[Dict]:
-        """Obtener un versículo aleatorio basado en la configuración"""
         # Seleccionar una categoría aleatoria de las activas
         active_categories = self.config.get("categories", ["fe", "amor", "esperanza"])
         
@@ -1163,7 +1108,6 @@ class MainWindow(QMainWindow):
             return BibleAPI.get_random_verse(self.config["version"])
     
     def play_notification_sound(self):
-        """Reproducir sonido de notificación"""
         sound_type = self.config.get("sound_type", "default")
         
         try:
@@ -1186,7 +1130,6 @@ class MainWindow(QMainWindow):
             print(f"No se pudo reproducir sonido: {e}")
     
     def show_config_dialog(self):
-        """Mostrar diálogo de configuración"""
         print("Mostrando diálogo de configuración...")
         
         # Si ya hay un diálogo abierto, traerlo al frente
@@ -1208,12 +1151,10 @@ class MainWindow(QMainWindow):
         print("Diálogo de configuración mostrado")
     
     def on_config_closed(self, result):
-        """Llamado cuando se cierra el diálogo de configuración"""
         print(f"Diálogo de configuración cerrado, resultado: {result}")
         self.config_dialog = None
     
     def show_history(self):
-        """Mostrar historial de versículos"""
         print("Mostrando historial...")
         
         # Si ya hay un diálogo abierto, traerlo al frente
@@ -1234,12 +1175,10 @@ class MainWindow(QMainWindow):
         print("Diálogo de historial mostrado")
     
     def on_history_closed(self, result):
-        """Llamado cuando se cierra el diálogo de historial"""
         print(f"Diálogo de historial cerrado, resultado: {result}")
         self.history_dialog = None
     
     def handle_config_change(self, new_config):
-        """Manejar cambios en la configuración"""
         # Verificar si el tema cambió
         old_theme = self.config.get("theme", "auto")
         new_theme = new_config.get("theme", "auto")
@@ -1268,7 +1207,6 @@ class MainWindow(QMainWindow):
         print("Configuración actualizada")
     
     def on_tray_activated(self, reason):
-        """Manejar clics en el ícono de la bandeja"""
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.show_notification()
             print("Doble clic: mostrando notificación")
@@ -1277,7 +1215,6 @@ class MainWindow(QMainWindow):
             print("Clic medio: alternando notificaciones")
     
     def quit_app(self):
-        """Salir de la aplicación"""
         print("Saliendo de la aplicación...")
         
         # Cerrar ventanas si están abiertas
@@ -1298,7 +1235,6 @@ class MainWindow(QMainWindow):
         QApplication.quit()
     
     def closeEvent(self, event):
-        """Manejar el cierre de la ventana principal"""
         # Si el usuario cierra la ventana principal, solo ocultarla
         if self.tray_icon.isVisible():
             self.hide()
@@ -1306,12 +1242,8 @@ class MainWindow(QMainWindow):
         else:
             event.accept()
 
-# ============================================================================
-# VENTANA DE CONFIGURACIÓN (QDialog)
-# ============================================================================
 
 class ConfigWindow(QDialog):
-    """Ventana de configuración de la aplicación"""
     
     config_changed = Signal(dict)
     
@@ -1330,7 +1262,6 @@ class ConfigWindow(QDialog):
         self.apply_theme()
     
     def apply_theme(self):
-        """Aplica el tema actual"""
         parent = self.parent()
         if parent and hasattr(parent, 'current_theme'):
             theme_type = parent.current_theme
@@ -1340,7 +1271,6 @@ class ConfigWindow(QDialog):
         self.setStyleSheet(ThemeManager.get_theme_stylesheet(theme_type))
     
     def init_ui(self):
-        """Inicializar interfaz de usuario"""
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -1528,30 +1458,24 @@ class ConfigWindow(QDialog):
         layout.addLayout(button_layout)
     
     def update_status_indicator(self, checked):
-        """Actualiza el indicador de estado"""
         self.status_indicator.setObjectName("status_active" if checked else "status_inactive")
         self.status_indicator.style().polish(self.status_indicator)
     
     def show_categories_dialog(self):
-        """Muestra el diálogo de selección de categorías"""
         print("Mostrando diálogo de categorías...")
         
-        # Si ya hay un diálogo abierto, traerlo al frente
         parent = self.parent()
         if parent and hasattr(parent, 'categories_dialog') and parent.categories_dialog is not None:
             parent.categories_dialog.raise_()
             parent.categories_dialog.activateWindow()
             return
         
-        # Crear el diálogo de categorías
         parent.categories_dialog = CategoriesWindow(self.config.get("categories", []), self)
         parent.categories_dialog.categories_changed.connect(self.update_categories)
         
-        # Pasar el tema explícitamente
         if parent and hasattr(parent, 'current_theme'):
             parent.categories_dialog.current_theme = parent.current_theme
         else:
-            # Obtener tema de la configuración
             theme_type = self.config.get("theme", "auto")
             if theme_type == "auto":
                 # Detectar tema del sistema
@@ -1572,15 +1496,12 @@ class ConfigWindow(QDialog):
             ThemeManager.get_theme_stylesheet(parent.categories_dialog.current_theme)
         )
         
-        # Conectar la señal de cerrado para limpiar la referencia
         parent.categories_dialog.finished.connect(lambda result: setattr(parent, 'categories_dialog', None))
         
-        # Mostrar el diálogo
         parent.categories_dialog.show()
         print("Diálogo de categorías mostrado")
     
     def update_categories(self, categories):
-        """Actualiza las categorías seleccionadas"""
         self.config["categories"] = categories
         count = len(categories)
         self.categories_count_label.setText(f"Categorías seleccionadas: {count}")
@@ -1595,7 +1516,6 @@ class ConfigWindow(QDialog):
                 self.categories_count_label.setText(f"Categorías: {', '.join(category_names)}")
     
     def load_config(self):
-        """Cargar configuración en los controles"""
         print("Cargando configuración en los controles...")
         
         self.enable_cb.setChecked(self.config.get("enabled", True))
@@ -1639,7 +1559,6 @@ class ConfigWindow(QDialog):
         self.update_status_indicator(self.config.get("enabled", True))
     
     def get_config(self):
-        """Obtener configuración desde los controles"""
         config = {}
         
         config["enabled"] = self.enable_cb.isChecked()
@@ -1657,13 +1576,11 @@ class ConfigWindow(QDialog):
         return config
     
     def save_config(self):
-        """Guardar configuración"""
         new_config = self.get_config()
         self.config_changed.emit(new_config)
         self.accept()
     
     def test_notification(self):
-        """Probar una notificación con la configuración actual"""
         # Obtener configuración temporal
         temp_config = self.get_config()
         
@@ -1726,16 +1643,10 @@ class ConfigWindow(QDialog):
                     pass
     
     def closeEvent(self, event):
-        """Manejar el cierre de la ventana"""
         print("ConfigWindow cerrada por closeEvent")
         self.reject()
 
-# ============================================================================
-# VENTANA DE HISTORIAL (QDialog)
-# ============================================================================
-
 class HistoryWindow(QDialog):
-    """Ventana para mostrar el historial de versículos"""
     
     def __init__(self, history, parent=None):
         super().__init__(parent)
@@ -1750,7 +1661,6 @@ class HistoryWindow(QDialog):
         self.apply_theme()
     
     def apply_theme(self):
-        """Aplica el tema actual"""
         parent = self.parent()
         if parent and hasattr(parent, 'current_theme'):
             theme_type = parent.current_theme
@@ -1760,7 +1670,6 @@ class HistoryWindow(QDialog):
         self.setStyleSheet(ThemeManager.get_theme_stylesheet(theme_type))
     
     def init_ui(self):
-        """Inicializar interfaz de usuario"""
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -1771,13 +1680,11 @@ class HistoryWindow(QDialog):
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title_label)
         
-        # Contador
         count_label = QLabel(f"Total de versículos: {len(self.history)}")
         count_label.setObjectName("subtitle")
         count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(count_label)
         
-        # Separador
         separator = QFrame()
         separator.setObjectName("separator")
         separator.setFrameShape(QFrame.Shape.HLine)
@@ -1813,7 +1720,6 @@ class HistoryWindow(QDialog):
         layout.addLayout(button_layout)
     
     def load_history(self):
-        """Cargar historial en la lista"""
         self.history_list.clear()
         
         if not self.history:
@@ -1856,7 +1762,6 @@ class HistoryWindow(QDialog):
             self.history_list.addItem(item)
     
     def show_verse_details(self, item):
-        """Mostrar detalles del versículo al hacer doble clic"""
         verse = item.data(Qt.ItemDataRole.UserRole)
         if verse:
             self.show_verse_dialog(verse)
@@ -1870,7 +1775,6 @@ class HistoryWindow(QDialog):
                 self.show_verse_dialog(verse)
     
     def show_verse_dialog(self, verse):
-        """Mostrar diálogo con los detalles del versículo"""
         dialog = QDialog(self)
         dialog.setWindowTitle("Detalles del versículo")
         dialog.setMinimumWidth(500)
@@ -1967,10 +1871,6 @@ class HistoryWindow(QDialog):
         """Manejar el cierre de la ventana"""
         print("HistoryWindow cerrada por closeEvent")
         self.reject()
-
-# ============================================================================
-# FUNCIÓN PRINCIPAL
-# ============================================================================
 
 def main():
     """Función principal de la aplicación"""
